@@ -1,0 +1,17 @@
+
+[root@k8smaster ~]# sudo useradd -m rajesh
+
+[root@k8smaster ~]# sudo passwd rajesh
+Changing password for user rajesh.
+New password:
+BAD PASSWORD: The password is shorter than 8 characters
+Retype new password:
+passwd: all authentication tokens updated successfully.
+
+[root@k8smaster ~]#
+
+[root@k8smaster ~]# su rajesh
+[rajesh@k8smaster ~]$
+
+[root@k8smaster ~]# sudo userdel -r rajesh
+

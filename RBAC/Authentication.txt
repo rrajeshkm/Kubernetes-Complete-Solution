@@ -1,11 +1,11 @@
-[root@k8smaster ~]# kubectl auth can-i get pods --as=mishra --namespace=default
+[root@k8smaster ~]# kubectl auth can-i get pods --as=rajesh --namespace=default
 yes
 
 =========
 Steps : 1
 =========
 
-[root@k8smaster ~]# openssl genrsa -out mishra.key 2048
+[root@k8smaster ~]# openssl genrsa -out rajesh.key 2048
 Generating RSA private key, 2048 bit long modulus (2 primes)
 .............+++++
 ..................................................................+++++
@@ -16,68 +16,82 @@ Steps : 2
 =========
 
 [root@k8smaster ~]# ll
--rw-------. 1 root root   1675 Aug 17 14:47 mishra.key
+-rw-------. 1 root root   1675 Aug 17 14:47 rajesh.key
 
 =========
 Steps : 3
 =========
 
-[root@k8smaster ~]# openssl req -new -key mishra.key -out mishra.csr -subj "/CN=mishra"
-[root@k8smaster ~]# openssl x509 -req -in mishra.csr -CA /etc/kubernetes/pki/ca.crt -CAkey /etc/kubernetes/pki/ca.key -CAcreateserial -out mishra.crt -days 365
+[root@k8smaster ~]# openssl req -new -key rajesh.key -out rajesh.csr -subj "/CN=rajesh"
+[root@k8smaster ~]# openssl x509 -req -in rajesh.csr -CA /etc/kubernetes/pki/ca.crt -CAkey /etc/kubernetes/pki/ca.key -CAcreateserial -out rajesh.crt -days 365
 Signature ok
-subject=CN = mishra
+subject=CN = rajesh
 Getting CA Private Key
 
 =========
 Steps : 4
 =========
 
-[root@k8smaster ~]# mkdir -p /home/mishra/.certs
+[root@k8smaster ~]# mkdir -p /home/rajesh/.certs
 
-[root@k8smaster ~]# sudo mv /root/mishra.crt /home/mishra/.certs/
-[root@k8smaster ~]# sudo mv /root/mishra.key /home/mishra/.certs/
+[root@k8smaster ~]# sudo mv /root/rajesh.crt /home/rajesh/.certs/
+[root@k8smaster ~]# sudo mv /root/rajesh.key /home/rajesh/.certs/
 
-[root@k8smaster ~]# sudo chown mishra:mishra /home/mishra/.certs/mishra.crt
-[root@k8smaster ~]# sudo chown mishra:mishra /home/mishra/.certs/mishra.key
+[root@k8smaster ~]# sudo chown rajesh:rajesh /home/rajesh/.certs/rajesh.crt
+[root@k8smaster ~]# sudo chown rajesh:rajesh /home/rajesh/.certs/rajesh.key
 [root@k8smaster .certs]#
-[root@k8smaster ~]# chmod 600 /home/mishra/.certs/mishra.crt
-[root@k8smaster ~]# chmod 600 /home/mishra/.certs/mishra.key
-[root@k8smaster ~]# kubectl config set-credentials mishra --client-certificate=/home/mishra/.certs/mishra.crt --client-key=/home/mishra/.certs/mishra.key
-User "mishra" set.
+[root@k8smaster ~]# chmod 600 /home/rajesh/.certs/rajesh.crt
+[root@k8smaster ~]# chmod 600 /home/rajesh/.certs/rajesh.key
+[root@k8smaster ~]# kubectl config set-credentials rajesh --client-certificate=/home/rajesh/.certs/rajesh.crt --client-key=/home/rajesh/.certs/rajesh.key
+User "rajesh" set.
 
 =========
 Steps : 5
 =========
 
-[root@k8smaster ~]# kubectl config set-context mishra-context --cluster=kubernetes --namespace=default --user=mishra
-Context "mishra-context" created.
+[root@k8smaster ~]# kubectl config set-context rajesh-context --cluster=kubernetes --namespace=default --user=rajesh
+Context "rajesh-context" created.
 
-[root@k8smaster ~]# kubectl config use-context mishra-context
-Switched to context "mishra-context".
+[root@k8smaster ~]# kubectl config use-context rajesh-context
+Switched to context "rajesh-context".
 
 [root@k8smaster ~]# kubectl config view
 
 EDIT CERTIFICATE LOCATION.
 
-- name: mishra
+- name: rajesh
   user:
-    client-certificate: /root/mishra.crt
-    client-key: /root/mishra.key
+    client-certificate: /root/rajesh.crt
+    client-key: /root/rajesh.key
+
+
+[root@k8smaster ~]#  kubectl config get-contexts
+CURRENT   NAME                          CLUSTER      AUTHINFO           NAMESPACE
+          kubernetes-admin@kubernetes   kubernetes   kubernetes-admin
+*         rajesh-context                kubernetes   rajesh             default
+[root@k8smaster ~]# 
+[root@k8smaster ~]# 
+[root@k8smaster ~]#  kubectl config use-context kubernetes-admin@kubernetes
+Switched to context "kubernetes-admin@kubernetes".
+[root@k8smaster ~]# 
+
 
 =========
 Steps : 6
 =========
 
-[root@k8smaster mishra]# scp ~/.kube/config /home/mishra/.kube/config
+[root@k8smaster ~]# mkdir -p /home/rajesh/.kube
 
-[root@k8smaster mishra]# chown mishra:mishra .kube
+[root@k8smaster ~]#  scp ~/.kube/config /home/rajesh/.kube/config
 
-[root@k8smaster .kube]# chown mishra:mishra config
+[root@k8smaster ~]#  chown rajesh:rajesh /home/rajesh/.kube
+
+[root@k8smaster ~]#  chown rajesh:rajesh /home/rajesh/.kube/config
 
 [root@k8smaster ~]# kubectl config get-contexts
 CURRENT   NAME                          CLUSTER      AUTHINFO           NAMESPACE
           kubernetes-admin@kubernetes   kubernetes   kubernetes-admin
-*         mishra-context                kubernetes   mishra             default
+*         rajesh-context                kubernetes   rajesh             default
 
 
 [root@k8smaster ~]# kubectl config use-context kubernetes-admin@kubernetes
@@ -89,3 +103,41 @@ Steps : 7
 
 [root@k8smaster ~]# kubectl create deployment nginx --image=nginx
 deployment.apps/nginx created
+[root@k8smaster ~]#
+
+===========
+Steps : 8
+===========
+
+=============================================================================================
+
+Switched to rajesh user and see if you accesss to view the pods but not for delete the pods.
+
+[root@k8smaster ~]# su rajesh
+
+[rajesh@k8smaster ~]$
+
+[rajesh@k8smaster ~]$ kubectl delete pods nginx-2-865c48c669-qhczc
+Error from server (Forbidden): pods "nginx-2-865c48c669-qhczc" is forbidden: User "rajesh" cannot delete resource "pods" in API group "" in the namespace "default"
+[rajesh@k8smaster ~]$
+
+----------------------------------------------------------------------------------------
+
+====================================================
+Also Verify that below configuration also refalcted.
+====================================================
+
+[rajesh@k8smaster ~]$ vi /home/rajesh/.kube/config
+
+- context:
+    cluster: kubernetes
+    namespace: default
+    user: rajesh
+  name: rajesh-context
+current-context: rajesh-context
+kind: Config
+preferences: {}
+users:
+- name: kubernetes-admin
+  user:
+----------------------------------------------------------------------------------------
