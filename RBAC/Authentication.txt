@@ -1,0 +1,91 @@
+[root@k8smaster ~]# kubectl auth can-i get pods --as=mishra --namespace=default
+yes
+
+=========
+Steps : 1
+=========
+
+[root@k8smaster ~]# openssl genrsa -out mishra.key 2048
+Generating RSA private key, 2048 bit long modulus (2 primes)
+.............+++++
+..................................................................+++++
+e is 65537 (0x010001)
+
+=========
+Steps : 2
+=========
+
+[root@k8smaster ~]# ll
+-rw-------. 1 root root   1675 Aug 17 14:47 mishra.key
+
+=========
+Steps : 3
+=========
+
+[root@k8smaster ~]# openssl req -new -key mishra.key -out mishra.csr -subj "/CN=mishra"
+[root@k8smaster ~]# openssl x509 -req -in mishra.csr -CA /etc/kubernetes/pki/ca.crt -CAkey /etc/kubernetes/pki/ca.key -CAcreateserial -out mishra.crt -days 365
+Signature ok
+subject=CN = mishra
+Getting CA Private Key
+
+=========
+Steps : 4
+=========
+
+[root@k8smaster ~]# mkdir -p /home/mishra/.certs
+
+[root@k8smaster ~]# sudo mv /root/mishra.crt /home/mishra/.certs/
+[root@k8smaster ~]# sudo mv /root/mishra.key /home/mishra/.certs/
+
+[root@k8smaster ~]# sudo chown mishra:mishra /home/mishra/.certs/mishra.crt
+[root@k8smaster ~]# sudo chown mishra:mishra /home/mishra/.certs/mishra.key
+[root@k8smaster .certs]#
+[root@k8smaster ~]# chmod 600 /home/mishra/.certs/mishra.crt
+[root@k8smaster ~]# chmod 600 /home/mishra/.certs/mishra.key
+[root@k8smaster ~]# kubectl config set-credentials mishra --client-certificate=/home/mishra/.certs/mishra.crt --client-key=/home/mishra/.certs/mishra.key
+User "mishra" set.
+
+=========
+Steps : 5
+=========
+
+[root@k8smaster ~]# kubectl config set-context mishra-context --cluster=kubernetes --namespace=default --user=mishra
+Context "mishra-context" created.
+
+[root@k8smaster ~]# kubectl config use-context mishra-context
+Switched to context "mishra-context".
+
+[root@k8smaster ~]# kubectl config view
+
+EDIT CERTIFICATE LOCATION.
+
+- name: mishra
+  user:
+    client-certificate: /root/mishra.crt
+    client-key: /root/mishra.key
+
+=========
+Steps : 6
+=========
+
+[root@k8smaster mishra]# scp ~/.kube/config /home/mishra/.kube/config
+
+[root@k8smaster mishra]# chown mishra:mishra .kube
+
+[root@k8smaster .kube]# chown mishra:mishra config
+
+[root@k8smaster ~]# kubectl config get-contexts
+CURRENT   NAME                          CLUSTER      AUTHINFO           NAMESPACE
+          kubernetes-admin@kubernetes   kubernetes   kubernetes-admin
+*         mishra-context                kubernetes   mishra             default
+
+
+[root@k8smaster ~]# kubectl config use-context kubernetes-admin@kubernetes
+Switched to context "kubernetes-admin@kubernetes".
+
+=========
+Steps : 7
+=========
+
+[root@k8smaster ~]# kubectl create deployment nginx --image=nginx
+deployment.apps/nginx created
